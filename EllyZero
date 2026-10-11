@@ -12,7 +12,7 @@ local WatermarkGui = nil
 local isTrollActive = false
 
 ---------------------------------------------------------
--- Intro Loading Screen (แก้ไขวิธีเรียกรูปให้เสถียรขึ้น)
+-- Intro Loading Screen
 ---------------------------------------------------------
 local INTRO_TITLE = "Ellysocute"
 local INTRO_TIME  = 4.5 
@@ -39,7 +39,6 @@ local function PlayIntro()
     group.Active = true
     group.Parent = gui
 
-    -- ใช้ ImageLabel พร้อมเช็ค Asset ID ตรงๆ เพื่อป้องกันภาพไม่ขึ้น
     local bg = Instance.new("ImageLabel")
     bg.AnchorPoint = Vector2.new(0.5, 0.5)
     bg.Position = UDim2.fromScale(0.5, 0.5)
@@ -204,7 +203,7 @@ local function StartSakuraEffect(targetParent)
 end
 
 ---------------------------------------------------------
--- ใส่รูปภาพพื้นหลัง UI แบบบังคับแสดงผล
+-- ใส่รูปภาพ Background ใหม่ภายใน UI (98819796956912)
 ---------------------------------------------------------
 task.spawn(function()
     local rootGui = Window.Root or (Window.UIElements and Window.UIElements.Main)
@@ -225,13 +224,86 @@ task.spawn(function()
         uiBg.Size = UDim2.fromScale(1, 1)
         uiBg.Position = UDim2.fromScale(0, 0)
         uiBg.BackgroundTransparency = 1
-        uiBg.Image = "rbxassetid://79436187892950"
+        uiBg.Image = "rbxassetid://98819796956912"
         uiBg.ScaleType = Enum.ScaleType.Crop
         uiBg.ImageTransparency = 0.1
         uiBg.ZIndex = -10
         uiBg.Parent = rootGui
         
         StartSakuraEffect(rootGui)
+    end
+end)
+
+---------------------------------------------------------
+-- ปุ่ม Watermark เปิด-ปิดหน้า UI (รูป 119662096507158)
+---------------------------------------------------------
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+if CoreGui:FindFirstChild("KornluvEllyWatermark") then
+    CoreGui:FindFirstChild("KornluvEllyWatermark"):Destroy()
+end
+
+WatermarkGui = Instance.new("ScreenGui")
+WatermarkGui.Name = "KornluvEllyWatermark"
+WatermarkGui.ResetOnSpawn = false
+WatermarkGui.Parent = gethui and gethui() or CoreGui
+
+local WatermarkButton = Instance.new("ImageButton")
+WatermarkButton.Name = "WatermarkIcon"
+WatermarkButton.Parent = WatermarkGui
+WatermarkButton.Size = UDim2.new(0, 60, 0, 60)
+WatermarkButton.Position = UDim2.new(1, -70, 0, 20)
+WatermarkButton.BackgroundTransparency = 1
+WatermarkButton.Image = "rbxassetid://119662096507158"
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = WatermarkButton
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(255, 215, 225)
+UIStroke.Thickness = 2
+UIStroke.Parent = WatermarkButton
+
+local dragging = false
+local dragInput, dragStart, startPos
+local hasMoved = false
+
+WatermarkButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        hasMoved = false
+        dragStart = input.Position
+        startPos = WatermarkButton.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+                if not hasMoved then
+                    Window:Minimize()
+                end
+            end
+        end)
+    end
+end)
+
+WatermarkButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        if (input.Position - dragStart).Magnitude > 5 then
+            hasMoved = true
+        end
+        local delta = input.Position - dragStart
+        WatermarkButton.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
     end
 end)
 
