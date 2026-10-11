@@ -6,10 +6,149 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 -- ตัวแปรควบคุมระบบทั้งหมด
 ---------------------------------------------------------
 local isScriptRunning = true
+local isSakuraActive = false
+local sakuraContainer = nil
 local WatermarkGui = nil
+local isTrollActive = false
 
 ---------------------------------------------------------
--- สร้างหน้าต่างหลัก (Window) - Theme Rose พาสเทล
+-- Intro Loading Screen
+---------------------------------------------------------
+local INTRO_IMAGE = "rbxassetid://92577004509867"
+local INTRO_TITLE = "Ellysocute"
+local INTRO_TIME  = 4.5 
+
+local function ResolveIntroImage(src)
+    if src == "" then return nil end
+    if string.sub(src, 1, 13) == "rbxassetid://" or string.sub(src, 1, 11) == "rbxasset://" then
+        return src
+    end
+    if string.sub(src, 1, 4) == "http" and writefile and getcustomasset then
+        local ok, result = pcall(function()
+            local data = game:HttpGet(src)
+            writefile("KornluvEllyIntro.png", data)
+            return getcustomasset("KornluvEllyIntro.png")
+        end)
+        if ok then return result end
+    end
+    return nil
+end
+
+local function PlayIntro()
+    local TweenService = game:GetService("TweenService")
+    local CoreGuiSvc = game:GetService("CoreGui")
+
+    local old = CoreGuiSvc:FindFirstChild("KornluvEllyIntro")
+    if old then old:Destroy() end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "KornluvEllyIntro"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 999
+    gui.Parent = gethui and gethui() or CoreGuiSvc
+
+    local group = Instance.new("CanvasGroup")
+    group.Size = UDim2.fromScale(1, 1)
+    group.BackgroundColor3 = Color3.fromRGB(255, 245, 248)
+    group.BorderSizePixel = 0
+    group.GroupTransparency = 1
+    group.Active = true
+    group.Parent = gui
+
+    local bg
+    local imageId = ResolveIntroImage(INTRO_IMAGE)
+    if imageId then
+        bg = Instance.new("ImageLabel")
+        bg.AnchorPoint = Vector2.new(0.5, 0.5)
+        bg.Position = UDim2.fromScale(0.5, 0.5)
+        bg.Size = UDim2.fromScale(1.1, 1.1)
+        bg.BackgroundTransparency = 1
+        bg.Image = imageId
+        bg.ScaleType = Enum.ScaleType.Crop
+        bg.ImageTransparency = 0.15
+        bg.Parent = group
+
+        TweenService:Create(bg, TweenInfo.new(7, Enum.EasingStyle.Linear), {
+            Size = UDim2.fromScale(1.3, 1.3),
+            Position = UDim2.fromScale(0.47, 0.48)
+        }):Play()
+    end
+
+    local title = Instance.new("TextLabel")
+    title.AnchorPoint = Vector2.new(0.5, 0.5)
+    title.Position = UDim2.fromScale(0.5, 0.5)
+    title.Size = UDim2.new(1, 0, 0, 60)
+    title.BackgroundTransparency = 1
+    title.Text = INTRO_TITLE
+    title.Font = Enum.Font.SourceSansBold
+    title.TextSize = 46
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextTransparency = 1
+    title.TextStrokeColor3 = Color3.fromRGB(255, 170, 195)
+    title.TextStrokeTransparency = 1
+    title.Parent = group
+
+    local percent = Instance.new("TextLabel")
+    percent.AnchorPoint = Vector2.new(0.5, 1)
+    percent.Position = UDim2.new(0.5, 0, 1, -50)
+    percent.Size = UDim2.new(1, 0, 0, 26)
+    percent.BackgroundTransparency = 1
+    percent.Text = "0%"
+    percent.Font = Enum.Font.SourceSansBold
+    percent.TextSize = 22
+    percent.TextColor3 = Color3.fromRGB(255, 255, 255)
+    percent.Parent = group
+
+    local barBg = Instance.new("Frame")
+    barBg.AnchorPoint = Vector2.new(0.5, 1)
+    barBg.Position = UDim2.new(0.5, 0, 1, -32)
+    barBg.Size = UDim2.new(0.7, 0, 0, 8)
+    barBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    barBg.BackgroundTransparency = 0.5
+    barBg.BorderSizePixel = 0
+    barBg.Parent = group
+    Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
+
+    local barFill = Instance.new("Frame")
+    barFill.Size = UDim2.fromScale(0, 1)
+    barFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    barFill.BorderSizePixel = 0
+    barFill.Parent = barBg
+    Instance.new("UICorner", barFill).CornerRadius = UDim.new(1, 0)
+
+    local counter = Instance.new("NumberValue")
+    counter.Changed:Connect(function(v)
+        percent.Text = math.floor(v) .. "%"
+    end)
+
+    TweenService:Create(group, TweenInfo.new(0.5), { GroupTransparency = 0 }):Play()
+    task.wait(0.4)
+
+    TweenService:Create(title, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = 0,
+        TextStrokeTransparency = 0.3,
+        Position = UDim2.fromScale(0.5, 0.45)
+    }):Play()
+
+    local loadInfo = TweenInfo.new(INTRO_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+    TweenService:Create(barFill, loadInfo, { Size = UDim2.fromScale(1, 1) }):Play()
+    local countTween = TweenService:Create(counter, loadInfo, { Value = 100 })
+    countTween:Play()
+    countTween.Completed:Wait()
+    percent.Text = "100%"
+    task.wait(0.3)
+
+    local fadeOut = TweenService:Create(group, TweenInfo.new(0.7), { GroupTransparency = 1 })
+    fadeOut:Play()
+    fadeOut.Completed:Wait()
+    gui:Destroy()
+end
+
+PlayIntro()
+
+---------------------------------------------------------
+-- สร้างหน้าต่างหลัก (Window)
 ---------------------------------------------------------
 local Window = KornluvElly:CreateWindow({
     Title = "KornluvElly",
@@ -22,59 +161,137 @@ local Window = KornluvElly:CreateWindow({
 })
 
 ---------------------------------------------------------
--- ฟังก์ชันสำหรับลบและหยุดการทำงานทั้งหมด
+-- ระบบเอฟเฟกต์ซากุระร่วง
 ---------------------------------------------------------
-local function DestroyUI()
-    isScriptRunning = false
+local TweenService = game:GetService("TweenService")
 
-    if WatermarkGui then
-        WatermarkGui:Destroy()
-        WatermarkGui = nil
+local function StopSakuraEffect()
+    isSakuraActive = false
+    if sakuraContainer then
+        sakuraContainer:Destroy()
+        sakuraContainer = nil
     end
+end
 
-    local CoreGui = game:GetService("CoreGui")
-    local oldWatermark = CoreGui:FindFirstChild("KornluvEllyWatermark") or (gethui and gethui():FindFirstChild("KornluvEllyWatermark"))
-    if oldWatermark then
-        oldWatermark:Destroy()
+local function StartSakuraEffect(targetParent)
+    StopSakuraEffect()
+    if not targetParent or not isScriptRunning then return end
+
+    isSakuraActive = true
+    sakuraContainer = Instance.new("Frame")
+    sakuraContainer.Name = "SakuraContainer"
+    sakuraContainer.Size = UDim2.fromScale(1, 1)
+    sakuraContainer.BackgroundTransparency = 1
+    sakuraContainer.ClipsDescendants = true
+    sakuraContainer.ZIndex = 1
+    sakuraContainer.Parent = targetParent
+
+    for i = 1, 25 do
+        task.spawn(function()
+            local petal = Instance.new("Frame")
+            local size = math.random(6, 12)
+            petal.Size = UDim2.fromOffset(size, math.floor(size * 1.5))
+            petal.BackgroundColor3 = Color3.fromRGB(255, 182, 193)
+            petal.BackgroundTransparency = 0.15 + math.random() * 0.2
+            petal.BorderSizePixel = 0
+            petal.Rotation = math.random(0, 360)
+            petal.Parent = sakuraContainer
+
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0.8, 0)
+            corner.Parent = petal
+
+            task.wait(math.random() * 3)
+
+            while isSakuraActive and isScriptRunning and petal and petal.Parent do
+                local startX = math.random()
+                petal.Position = UDim2.fromScale(startX, -0.1)
+                
+                local fallDuration = 4 + math.random() * 4
+                local endX = math.clamp(startX + (math.random() - 0.5) * 0.3, 0, 1)
+                local endRotation = petal.Rotation + math.random(180, 540)
+
+                local fallTween = TweenService:Create(petal, TweenInfo.new(fallDuration, Enum.EasingStyle.Linear), {
+                    Position = UDim2.fromScale(endX, 1.1),
+                    Rotation = endRotation
+                })
+
+                fallTween:Play()
+                fallTween.Completed:Wait()
+            end
+        end)
     end
-
-    KornluvElly:Destroy()
 end
 
 ---------------------------------------------------------
--- ส่วนของ Tabs และ Elements
+-- ใส่รูปภาพพื้นหลัง + เรียกใช้ระบบซากุระ
+---------------------------------------------------------
+task.spawn(function()
+    local rootGui = Window.Root or (Window.UIElements and Window.UIElements.Main)
+    if not rootGui then
+        local CoreGui = game:GetService("CoreGui")
+        local targetName = "Fluent"
+        local found = (gethui and gethui():FindFirstChild(targetName)) or CoreGui:FindFirstChild(targetName)
+        if found then
+            rootGui = found:FindFirstChildWhichIsA("Frame", true)
+        end
+    end
+
+    if rootGui then
+        rootGui.BackgroundColor3 = Color3.fromRGB(255, 242, 246)
+
+        local uiBg = Instance.new("ImageLabel")
+        uiBg.Name = "WindowCustomBackground"
+        uiBg.Size = UDim2.fromScale(1, 1)
+        uiBg.Position = UDim2.fromScale(0, 0)
+        uiBg.BackgroundTransparency = 1
+        uiBg.Image = "rbxassetid://79436187892950"
+        uiBg.ScaleType = Enum.ScaleType.Crop
+        uiBg.ImageTransparency = 0.05
+        uiBg.ZIndex = -10
+        uiBg.Parent = rootGui
+        
+        local overlay = Instance.new("Frame")
+        overlay.Name = "PastelOverlay"
+        overlay.Size = UDim2.fromScale(1, 1)
+        overlay.BackgroundColor3 = Color3.fromRGB(255, 245, 248)
+        overlay.BackgroundTransparency = 0.85
+        overlay.BorderSizePixel = 0
+        overlay.ZIndex = -9
+        overlay.Parent = rootGui
+
+        StartSakuraEffect(rootGui)
+    end
+end)
+
+---------------------------------------------------------
+-- ส่วนของ Tabs และ Elements (สร้าง Tab Main และหมวดหมู่ General)
 ---------------------------------------------------------
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Main = Window:AddTab({ Title = "Main", Icon = "home" })
 }
 
 do
-    ---------------------------------------------------------
-    -- หมวดหมู่: General (Main Tab)
-    ---------------------------------------------------------
     Tabs.Main:AddSection("General")
 
-    -- ฟังก์ชัน Troll ตัวอย่าง
-    Tabs.Main:AddButton({
+    local TrollToggle = Tabs.Main:AddToggle("TrollToggle", {
         Title = "Troll Function",
-        Description = "กดเพื่อใช้งานฟังก์ชัน Troll",
-        Callback = function()
-            print("Troll function activated!")
-            -- ใส่โค้ดการทำงานของฟังก์ชัน Troll ที่นี่
-        end
+        Description = "เปิด/ปิด ระบบฟังก์ชันป่วน (Troll)",
+        Default = false
     })
-
-    ---------------------------------------------------------
-    -- หมวดหมู่: Settings (Settings Tab)
-    ---------------------------------------------------------
-    Tabs.Settings:AddSection("Script Unload")
-
-    Tabs.Settings:AddButton({
-        Title = "Destroy UI (ทำลายตัวเอง)",
-        Description = "ปิดการทำงานทั้งหมด ลบ Watermark และลบ UI ออกจากเกม",
-        Callback = function()
-            DestroyUI()
+    
+    TrollToggle:OnChanged(function(Value)
+        isTrollActive = Value
+        print("Troll Status:", Value)
+        
+        -- ใส่โค้ดการทำงานของฟังก์ชัน Troll เมื่อเปิดใช้งานที่นี่
+        if isTrollActive then
+            task.spawn(function()
+                while isTrollActive and isScriptRunning do
+                    -- ตัวอย่างการทำงานขณะเปิด Troll
+                    task.wait(1)
+                end
+            end)
         end
-    })
+    end)
 end
