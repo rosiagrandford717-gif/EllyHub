@@ -10,6 +10,8 @@ local isSakuraActive = false
 local sakuraContainer = nil
 local WatermarkGui = nil
 local isTrollActive = false
+local trollGuiContainer = nil
+local trollRenderConnection = nil
 
 ---------------------------------------------------------
 -- Intro Loading Screen
@@ -265,12 +267,10 @@ task.spawn(function()
     WatermarkButton.Image = "rbxassetid://119662096507158"
     WatermarkButton.ScaleType = Enum.ScaleType.Crop
 
-    -- ทำขอบให้เป็นวงกลม 100%
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(1, 0)
     UICorner.Parent = WatermarkButton
 
-    -- เพิ่มเส้นขอบสีชมพูพาสเทล
     local UIStroke = Instance.new("UIStroke")
     UIStroke.Color = Color3.fromRGB(255, 180, 205)
     UIStroke.Thickness = 2.5
@@ -319,6 +319,73 @@ task.spawn(function()
 end)
 
 ---------------------------------------------------------
+-- ฟังก์ชันสำหรับ ลบ/ปิดการทำงานของ Troll
+---------------------------------------------------------
+local function RemoveTrollEffect()
+    if trollRenderConnection then
+        trollRenderConnection:Disconnect()
+        trollRenderConnection = nil
+    end
+    if trollGuiContainer then
+        trollGuiContainer:Destroy()
+        trollGuiContainer = nil
+    end
+end
+
+---------------------------------------------------------
+-- ฟังก์ชันสำหรับ สร้าง/เปิดการทำงานของ Troll
+---------------------------------------------------------
+local function CreateTrollEffect()
+    RemoveTrollEffect()
+
+    local player = game.Players.LocalPlayer
+    local RunService = game:GetService("RunService")
+
+    local function attachToCharacter(character)
+        if not character then return end
+        local hrp = character:WaitForChild("HumanoidRootPart", 5) or character:WaitForChild("Head", 5)
+        if not hrp then return end
+
+        if trollGuiContainer then trollGuiContainer:Destroy() end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "TrollOverlayGui"
+        billboard.Size = UDim2.new(4.5, 0, 5.5, 0)
+        billboard.StudsOffset = Vector3.new(0, 0.5, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Adornee = hrp
+        billboard.Parent = character
+
+        local img = Instance.new("ImageLabel")
+        img.Size = UDim2.fromScale(1, 1)
+        img.BackgroundTransparency = 1
+        img.Image = "rbxassetid://77095580457778"
+        img.ScaleType = Enum.ScaleType.Fit
+        img.Parent = billboard
+
+        trollGuiContainer = billboard
+    end
+
+    if player.Character then
+        attachToCharacter(player.Character)
+    end
+
+    trollRenderConnection = RunService.RenderStepped:Connect(function()
+        if not isTrollActive or not isScriptRunning then
+            RemoveTrollEffect()
+            return
+        end
+        
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            if not trollGuiContainer or not trollGuiContainer.Parent or trollGuiContainer.Parent ~= char then
+                attachToCharacter(char)
+            end
+        end
+    end)
+end
+
+---------------------------------------------------------
 -- ส่วนของ Tabs และ Elements
 ---------------------------------------------------------
 local Tabs = {
@@ -330,20 +397,16 @@ do
 
     local TrollToggle = Tabs.Main:AddToggle("TrollToggle", {
         Title = "Troll Function",
-        Description = "เปิด/ปิด ระบบฟังก์ชันป่วน (Troll)",
+        Description = "แสดงรูปป่วนติดตัวละครของคุณ",
         Default = false
     })
     
     TrollToggle:OnChanged(function(Value)
         isTrollActive = Value
-        print("Troll Status:", Value)
-        
         if isTrollActive then
-            task.spawn(function()
-                while isTrollActive and isScriptRunning do
-                    task.wait(1)
-                end
-            end)
+            CreateTrollEffect()
+        else
+            RemoveTrollEffect()
         end
     end)
 end
