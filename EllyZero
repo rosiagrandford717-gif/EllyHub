@@ -12,7 +12,7 @@ local WatermarkGui = nil
 local isTrollActive = false
 
 ---------------------------------------------------------
--- Intro Loading Screen
+-- Intro Loading Screen (รูป Intro + โทนชมพูพาสเทล)
 ---------------------------------------------------------
 local INTRO_IMAGE = "rbxassetid://92577004509867"
 local INTRO_TITLE = "Ellysocute"
@@ -56,6 +56,7 @@ local function PlayIntro()
     group.Active = true
     group.Parent = gui
 
+    -- โหลดและแสดงผลรูป Intro
     local bg
     local imageId = ResolveIntroImage(INTRO_IMAGE)
     if imageId then
@@ -73,7 +74,24 @@ local function PlayIntro()
             Size = UDim2.fromScale(1.3, 1.3),
             Position = UDim2.fromScale(0.47, 0.48)
         }):Play()
+        TweenService:Create(bg, TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            ImageTransparency = 0.05
+        }):Play()
     end
+
+    local shade = Instance.new("Frame")
+    shade.Size = UDim2.fromScale(1, 1)
+    shade.BackgroundColor3 = Color3.fromRGB(255, 235, 242)
+    shade.BorderSizePixel = 0
+    shade.Parent = group
+    local shadeGrad = Instance.new("UIGradient")
+    shadeGrad.Rotation = 90
+    shadeGrad.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.85),
+        NumberSequenceKeypoint.new(0.6, 0.6),
+        NumberSequenceKeypoint.new(1, 0.3),
+    })
+    shadeGrad.Parent = shade
 
     local title = Instance.new("TextLabel")
     title.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -224,7 +242,7 @@ local function StartSakuraEffect(targetParent)
 end
 
 ---------------------------------------------------------
--- ใส่รูปภาพพื้นหลัง + เรียกใช้ระบบซากุระ
+-- ใส่รูปภาพพื้นหลัง UI (Background Image) + ซากุระ
 ---------------------------------------------------------
 task.spawn(function()
     local rootGui = Window.Root or (Window.UIElements and Window.UIElements.Main)
@@ -240,6 +258,7 @@ task.spawn(function()
     if rootGui then
         rootGui.BackgroundColor3 = Color3.fromRGB(255, 242, 246)
 
+        -- สร้าง ImageLabel สำหรับรูป Background ของ UI
         local uiBg = Instance.new("ImageLabel")
         uiBg.Name = "WindowCustomBackground"
         uiBg.Size = UDim2.fromScale(1, 1)
@@ -265,7 +284,7 @@ task.spawn(function()
 end)
 
 ---------------------------------------------------------
--- ส่วนของ Tabs และ Elements (สร้าง Tab Main และหมวดหมู่ General)
+-- ส่วนของ Tabs และ Elements
 ---------------------------------------------------------
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "home" })
@@ -284,11 +303,10 @@ do
         isTrollActive = Value
         print("Troll Status:", Value)
         
-        -- ใส่โค้ดการทำงานของฟังก์ชัน Troll เมื่อเปิดใช้งานที่นี่
         if isTrollActive then
             task.spawn(function()
                 while isTrollActive and isScriptRunning do
-                    -- ตัวอย่างการทำงานขณะเปิด Troll
+                    -- ใส่โค้ดคำสั่ง Troll ที่ต้องการทำงานขณะเปิดตรงนี้
                     task.wait(1)
                 end
             end)
