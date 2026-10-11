@@ -235,7 +235,7 @@ task.spawn(function()
 end)
 
 ---------------------------------------------------------
--- ปุ่ม Watermark เปิด-ปิดหน้า UI (รูป 119662096507158)
+-- ปุ่ม Watermark วงกลม (เลื่อนได้ + กดเปิด/ปิด UI)
 ---------------------------------------------------------
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
@@ -259,17 +259,21 @@ task.spawn(function()
     WatermarkButton.Name = "WatermarkIcon"
     WatermarkButton.Parent = WatermarkGui
     WatermarkButton.Size = UDim2.new(0, 60, 0, 60)
-    WatermarkButton.Position = UDim2.new(1, -70, 0, 20)
-    WatermarkButton.BackgroundTransparency = 1
+    WatermarkButton.Position = UDim2.new(1, -80, 0, 30)
+    WatermarkButton.BackgroundTransparency = 0.2
+    WatermarkButton.BackgroundColor3 = Color3.fromRGB(255, 240, 245)
     WatermarkButton.Image = "rbxassetid://119662096507158"
+    WatermarkButton.ScaleType = Enum.ScaleType.Crop
 
+    -- ทำขอบให้เป็นวงกลม 100%
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(1, 0)
     UICorner.Parent = WatermarkButton
 
+    -- เพิ่มเส้นขอบสีชมพูพาสเทล
     local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(255, 215, 225)
-    UIStroke.Thickness = 2
+    UIStroke.Color = Color3.fromRGB(255, 180, 205)
+    UIStroke.Thickness = 2.5
     UIStroke.Parent = WatermarkButton
 
     local dragging = false
