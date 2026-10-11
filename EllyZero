@@ -1,34 +1,25 @@
-Elly UI Presentation Script (Roblox Lua)
 --[[
     Elly UI Script
-    - Based on Fluent UI
-    - Fullscreen 6-Second Loader with Snow Effect & Custom Background
+    - Fullscreen 6-Second Loader with Snow Effect
     - Custom Main UI Background
     - Floating Circular Watermark Toggle Button
-    - Cleaned Tabs: Only "Main" tab with "Troll" section
+    - Main Tab with Character Picture Troll Function (Asset ID: 77095580457778)
 --]]
 
--- Services
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
 --------------------------------------------------------------------------------
--- 1. FULLSCREEN INTRO LOADER & SNOW EFFECT (6 Seconds Total)
+-- 1. FULLSCREEN INTRO LOADER & SNOW EFFECT (6 Seconds)
 --------------------------------------------------------------------------------
 local loaderGui = Instance.new("ScreenGui")
 loaderGui.Name = "EllyUILoader"
 loaderGui.ResetOnSpawn = false
 loaderGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-pcall(function()
-    loaderGui.Parent = CoreGui
-end)
-if not loaderGui.Parent then
-    loaderGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-end
+pcall(function() loaderGui.Parent = CoreGui end)
+if not loaderGui.Parent then loaderGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") end
 
--- Fullscreen Background
 local bgImage = Instance.new("ImageLabel")
 bgImage.Name = "Background"
 bgImage.Size = UDim2.fromScale(1, 1)
@@ -37,14 +28,12 @@ bgImage.Image = "rbxassetid://92577004509867"
 bgImage.ScaleType = Enum.ScaleType.Crop
 bgImage.Parent = loaderGui
 
--- Dark Overlay
 local overlay = Instance.new("Frame")
 overlay.Size = UDim2.fromScale(1, 1)
 overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 overlay.BackgroundTransparency = 0.4
 overlay.Parent = bgImage
 
--- Snow Container
 local snowContainer = Instance.new("Frame")
 snowContainer.Name = "SnowContainer"
 snowContainer.Size = UDim2.fromScale(1, 1)
@@ -52,7 +41,6 @@ snowContainer.BackgroundTransparency = 1
 snowContainer.ClipsDescendants = true
 snowContainer.Parent = loaderGui
 
--- Create Snowflakes Effect
 local isSnowing = true
 task.spawn(function()
     while isSnowing do
@@ -67,7 +55,6 @@ task.spawn(function()
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim2.fromScale(1, 0)
         corner.Parent = flake
-        
         flake.Parent = snowContainer
 
         local fallDuration = math.random(3, 6)
@@ -77,17 +64,12 @@ task.spawn(function()
             Position = UDim2.fromScale(flake.Position.X.Scale + drift, 1.05),
             BackgroundTransparency = 1
         })
-        
         tween:Play()
-        tween.Completed:Connect(function()
-            flake:Destroy()
-        end)
-        
+        tween.Completed:Connect(function() flake:Destroy() end)
         task.wait(0.1)
     end
 end)
 
--- UI Title in Loader
 local loaderTitle = Instance.new("TextLabel")
 loaderTitle.Size = UDim2.fromOffset(400, 50)
 loaderTitle.Position = UDim2.new(0.5, -200, 0.4, 0)
@@ -98,7 +80,6 @@ loaderTitle.TextSize = 42
 loaderTitle.Font = Enum.Font.FredokaOne
 loaderTitle.Parent = loaderGui
 
--- Progress Bar Outer
 local barBackground = Instance.new("Frame")
 barBackground.Size = UDim2.fromOffset(360, 14)
 barBackground.Position = UDim2.new(0.5, -180, 0.52, 0)
@@ -110,7 +91,6 @@ local barCorner = Instance.new("UICorner")
 barCorner.CornerRadius = UDim2.fromOffset(7)
 barCorner.Parent = barBackground
 
--- Progress Bar Fill
 local barFill = Instance.new("Frame")
 barFill.Size = UDim2.fromScale(0, 1)
 barFill.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
@@ -121,7 +101,6 @@ local fillCorner = Instance.new("UICorner")
 fillCorner.CornerRadius = UDim2.fromOffset(7)
 fillCorner.Parent = barFill
 
--- Percentage Text
 local percentLabel = Instance.new("TextLabel")
 percentLabel.Size = UDim2.fromOffset(200, 30)
 percentLabel.Position = UDim2.new(0.5, -100, 0.56, 0)
@@ -132,7 +111,6 @@ percentLabel.TextSize = 18
 percentLabel.Font = Enum.Font.GothamBold
 percentLabel.Parent = loaderGui
 
--- 6-Second Loader Execution
 local totalDuration = 6
 local steps = 100
 local stepTime = totalDuration / steps
@@ -143,16 +121,14 @@ for i = 1, steps do
     task.wait(stepTime)
 end
 
--- Fade out loader
 isSnowing = false
 local fadeOut = TweenService:Create(overlay, TweenInfo.new(0.5), {BackgroundTransparency = 0})
 fadeOut:Play()
 fadeOut.Completed:Wait()
-
 loaderGui:Destroy()
 
 --------------------------------------------------------------------------------
--- 2. LOAD FLUENT LIBRARY (REBRANDED TO ELLY UI)
+-- 2. LOAD FLUENT LIBRARY (ELLY UI)
 --------------------------------------------------------------------------------
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
@@ -167,7 +143,7 @@ local Window = Fluent:CreateWindow({
 })
 
 --------------------------------------------------------------------------------
--- 3. APPLY MAIN UI CUSTOM BACKGROUND
+-- 3. MAIN UI BACKGROUND
 --------------------------------------------------------------------------------
 pcall(function()
     local guiParent = CoreGui:FindFirstChild("Fluent") or game.Players.LocalPlayer.PlayerGui:FindFirstChild("Fluent")
@@ -212,7 +188,7 @@ watermarkBtn.Draggable = true
 watermarkBtn.Parent = watermarkGui
 
 local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim2.fromScale(1, 0) -- Circle
+btnCorner.CornerRadius = UDim2.fromScale(1, 0)
 btnCorner.Parent = watermarkBtn
 
 local btnStroke = Instance.new("UIStroke")
@@ -220,13 +196,8 @@ btnStroke.Color = Color3.fromRGB(150, 100, 255)
 btnStroke.Thickness = 2
 btnStroke.Parent = watermarkBtn
 
--- Toggle UI Visibility on Click
-local uiVisible = true
 watermarkBtn.MouseButton1Click:Connect(function()
-    uiVisible = not uiVisible
-    if Window then
-        Window:Minimize()
-    end
+    if Window then Window:Minimize() end
 end)
 
 --------------------------------------------------------------------------------
@@ -236,55 +207,50 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "user" })
 }
 
--- Section: Troll
 Tabs.Main:AddSection("Troll Functions")
 
-Tabs.Main:AddButton({
-    Title = "Fling All Players",
-    Description = "Spins local player at high speed to fling nearby players",
-    Callback = function()
-        Fluent:Notify({
-            Title = "Elly UI",
-            Content = "Fling All Activated!",
-            Duration = 3
-        })
-    end
-})
+local trollBillboard = nil
 
-Tabs.Main:AddToggle("LoopJumpscare", {
-    Title = "Jumpscare Troll",
-    Default = false
-})
-
-Tabs.Main:AddSlider("WalkSpeedTroll", {
-    Title = "Speed Multiplier",
-    Description = "Adjust player speed for troll modes",
-    Default = 16,
-    Min = 16,
-    Max = 350,
-    Rounding = 0,
+Tabs.Main:AddToggle("TrollPicture", {
+    Title = "Follow Picture Troll",
+    Description = "Attaches custom picture to your character",
+    Default = false,
     Callback = function(Value)
-        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        local player = game.Players.LocalPlayer
+        
+        if Value then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if trollBillboard then trollBillboard:Destroy() end
+                
+                local hrp = player.Character.HumanoidRootPart
+                
+                trollBillboard = Instance.new("BillboardGui")
+                trollBillboard.Name = "EllyTrollImage"
+                trollBillboard.Adornee = hrp
+                trollBillboard.Size = UDim2.fromOffset(130, 130)
+                trollBillboard.StudsOffset = Vector3.new(0, 0, 0)
+                trollBillboard.AlwaysOnTop = true
+                trollBillboard.Parent = hrp
+                
+                local img = Instance.new("ImageLabel")
+                img.Size = UDim2.fromScale(1, 1)
+                img.BackgroundTransparency = 1
+                img.Image = "rbxassetid://77095580457778"
+                img.Parent = trollBillboard
+            end
+        else
+            if trollBillboard then
+                trollBillboard:Destroy()
+                trollBillboard = nil
+            end
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local existing = player.Character.HumanoidRootPart:FindFirstChild("EllyTrollImage")
+                if existing then existing:Destroy() end
+            end
         end
     end
 })
 
-Tabs.Main:AddInput("TrollAnnounce", {
-    Title = "Fake Announcement",
-    Default = "",
-    Placeholder = "Type text to spam...",
-    Finished = true,
-    Callback = function(Value)
-        Fluent:Notify({
-            Title = "Broadcast",
-            Content = Value,
-            Duration = 5
-        })
-    end
-})
-
--- Finish Setup
 Window:SelectTab(1)
 
 Fluent:Notify({
@@ -292,15 +258,3 @@ Fluent:Notify({
     Content = "Welcome to Elly UI Main Hub!",
     Duration = 5
 })
-```eof
-
-ปรับแต่งเรียบร้อยแล้วครับ! สำหรับระบบ Elly UI มีรายละเอียดตามที่คุณขอ ดังนี้:
-
-1. **เปลี่ยนชื่อเป็น Elly UI** ทั้งในระบบ Loader และหน้าเมนูหลัก
-2. **ระบบ Intro โหลด 6 วินาที:** 
-   - แสดงเปอร์เซ็นต์นับ 1–100% ภายในระยะเวลารวม 6 วินาทีพอดี
-   - ใช้ภาพ Background Asset ID `92577004509867` เต็มจอ
-   - เพิ่มระบบเอฟเฟกต์หิมะตกทั่วทั้งหน้าจอตอนกำลังโหลด
-3. **รูปภาพ Background เมนูหลัก:** เมื่อเข้า UI จะใช้ภาพ Background Asset ID `98819796956912`
-4. **Watermark / ปุ่มเปิด-ปิด UI:** สร้างปุ่มทรงกลมลอยบนจอ ใช้รูปภาพ Asset ID `119662096507158` ลากย้ายตำแหน่งได้ และกดเพื่อเปิด/ซ่อนเมนูได้
-5. **หน้าหลัก Clean & หมวด Troll:** ลบแท็บเก่าออกทั้งหมด เหลือเฉพาะแท็บ **Main** และสร้างหมวดหมู่ **Troll** พร้อมฟังก์ชันตัวอย่างให้เรียบร้อยครับ
