@@ -29,7 +29,7 @@ local function PlayIntro()
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
     gui.DisplayOrder = 999
-    gui.Parent = gethui and gethui() or CoreGuiSvc
+    gui.Parent = (gethui and gethui()) or CoreGuiSvc
 
     local group = Instance.new("CanvasGroup")
     group.Size = UDim2.fromScale(1, 1)
@@ -203,7 +203,7 @@ local function StartSakuraEffect(targetParent)
 end
 
 ---------------------------------------------------------
--- ใส่รูปภาพ Background ใหม่ภายใน UI (98819796956912)
+-- ใส่รูปภาพ Background ภายใน UI (98819796956912)
 ---------------------------------------------------------
 task.spawn(function()
     local rootGui = Window.Root or (Window.UIElements and Window.UIElements.Main)
@@ -237,74 +237,81 @@ end)
 ---------------------------------------------------------
 -- ปุ่ม Watermark เปิด-ปิดหน้า UI (รูป 119662096507158)
 ---------------------------------------------------------
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
+task.spawn(function()
+    local CoreGui = game:GetService("CoreGui")
+    local UserInputService = game:GetService("UserInputService")
 
-if CoreGui:FindFirstChild("KornluvEllyWatermark") then
-    CoreGui:FindFirstChild("KornluvEllyWatermark"):Destroy()
-end
+    if CoreGui:FindFirstChild("KornluvEllyWatermark") then
+        CoreGui:FindFirstChild("KornluvEllyWatermark"):Destroy()
+    end
+    if gethui and gethui():FindFirstChild("KornluvEllyWatermark") then
+        gethui():FindFirstChild("KornluvEllyWatermark"):Destroy()
+    end
 
-WatermarkGui = Instance.new("ScreenGui")
-WatermarkGui.Name = "KornluvEllyWatermark"
-WatermarkGui.ResetOnSpawn = false
-WatermarkGui.Parent = gethui and gethui() or CoreGui
+    WatermarkGui = Instance.new("ScreenGui")
+    WatermarkGui.Name = "KornluvEllyWatermark"
+    WatermarkGui.ResetOnSpawn = false
+    WatermarkGui.IgnoreGuiInset = true
+    WatermarkGui.DisplayOrder = 998
+    WatermarkGui.Parent = (gethui and gethui()) or CoreGui
 
-local WatermarkButton = Instance.new("ImageButton")
-WatermarkButton.Name = "WatermarkIcon"
-WatermarkButton.Parent = WatermarkGui
-WatermarkButton.Size = UDim2.new(0, 60, 0, 60)
-WatermarkButton.Position = UDim2.new(1, -70, 0, 20)
-WatermarkButton.BackgroundTransparency = 1
-WatermarkButton.Image = "rbxassetid://119662096507158"
+    local WatermarkButton = Instance.new("ImageButton")
+    WatermarkButton.Name = "WatermarkIcon"
+    WatermarkButton.Parent = WatermarkGui
+    WatermarkButton.Size = UDim2.new(0, 60, 0, 60)
+    WatermarkButton.Position = UDim2.new(1, -70, 0, 20)
+    WatermarkButton.BackgroundTransparency = 1
+    WatermarkButton.Image = "rbxassetid://119662096507158"
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(1, 0)
-UICorner.Parent = WatermarkButton
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = WatermarkButton
 
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(255, 215, 225)
-UIStroke.Thickness = 2
-UIStroke.Parent = WatermarkButton
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(255, 215, 225)
+    UIStroke.Thickness = 2
+    UIStroke.Parent = WatermarkButton
 
-local dragging = false
-local dragInput, dragStart, startPos
-local hasMoved = false
+    local dragging = false
+    local dragInput, dragStart, startPos
+    local hasMoved = false
 
-WatermarkButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        hasMoved = false
-        dragStart = input.Position
-        startPos = WatermarkButton.Position
+    WatermarkButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            hasMoved = false
+            dragStart = input.Position
+            startPos = WatermarkButton.Position
 
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-                if not hasMoved then
-                    Window:Minimize()
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    if not hasMoved then
+                        Window:Minimize()
+                    end
                 end
-            end
-        end)
-    end
-end)
-
-WatermarkButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        if (input.Position - dragStart).Magnitude > 5 then
-            hasMoved = true
+            end)
         end
-        local delta = input.Position - dragStart
-        WatermarkButton.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
-    end
+    end)
+
+    WatermarkButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            if (input.Position - dragStart).Magnitude > 5 then
+                hasMoved = true
+            end
+            local delta = input.Position - dragStart
+            WatermarkButton.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
 end)
 
 ---------------------------------------------------------
