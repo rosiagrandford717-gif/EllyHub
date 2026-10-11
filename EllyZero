@@ -10,8 +10,8 @@ local isSakuraActive = false
 local sakuraContainer = nil
 local WatermarkGui = nil
 local isTrollActive = false
-local trollGuiContainer = nil
-local trollRenderConnection = nil
+local trollPart = nil
+local trollConnection = nil
 
 ---------------------------------------------------------
 -- Intro Loading Screen
@@ -319,70 +319,17 @@ task.spawn(function()
 end)
 
 ---------------------------------------------------------
--- ฟังก์ชันสำหรับ ลบ/ปิดการทำงานของ Troll
+-- ฟังก์ชันเคลียร์รูป Troll
 ---------------------------------------------------------
-local function RemoveTrollEffect()
-    if trollRenderConnection then
-        trollRenderConnection:Disconnect()
-        trollRenderConnection = nil
+local function StopTrollEffect()
+    if trollConnection then
+        trollConnection:Disconnect()
+        trollConnection = nil
     end
-    if trollGuiContainer then
-        trollGuiContainer:Destroy()
-        trollGuiContainer = nil
+    if trollPart then
+        trollPart:Destroy()
+        trollPart = nil
     end
-end
-
----------------------------------------------------------
--- ฟังก์ชันสำหรับ สร้าง/เปิดการทำงานของ Troll
----------------------------------------------------------
-local function CreateTrollEffect()
-    RemoveTrollEffect()
-
-    local player = game.Players.LocalPlayer
-    local RunService = game:GetService("RunService")
-
-    local function attachToCharacter(character)
-        if not character then return end
-        local hrp = character:WaitForChild("HumanoidRootPart", 5) or character:WaitForChild("Head", 5)
-        if not hrp then return end
-
-        if trollGuiContainer then trollGuiContainer:Destroy() end
-
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "TrollOverlayGui"
-        billboard.Size = UDim2.new(4.5, 0, 5.5, 0)
-        billboard.StudsOffset = Vector3.new(0, 0.5, 0)
-        billboard.AlwaysOnTop = true
-        billboard.Adornee = hrp
-        billboard.Parent = character
-
-        local img = Instance.new("ImageLabel")
-        img.Size = UDim2.fromScale(1, 1)
-        img.BackgroundTransparency = 1
-        img.Image = "rbxassetid://77095580457778"
-        img.ScaleType = Enum.ScaleType.Fit
-        img.Parent = billboard
-
-        trollGuiContainer = billboard
-    end
-
-    if player.Character then
-        attachToCharacter(player.Character)
-    end
-
-    trollRenderConnection = RunService.RenderStepped:Connect(function()
-        if not isTrollActive or not isScriptRunning then
-            RemoveTrollEffect()
-            return
-        end
-        
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            if not trollGuiContainer or not trollGuiContainer.Parent or trollGuiContainer.Parent ~= char then
-                attachToCharacter(char)
-            end
-        end
-    end)
 end
 
 ---------------------------------------------------------
@@ -397,16 +344,55 @@ do
 
     local TrollToggle = Tabs.Main:AddToggle("TrollToggle", {
         Title = "Troll Function",
-        Description = "แสดงรูปป่วนติดตัวละครของคุณ",
+        Description = "สร้างรูปภาพปิดทับตัวละครเรา (เห็นเฉพาะเราคนเดียว)",
         Default = false
     })
     
     TrollToggle:OnChanged(function(Value)
         isTrollActive = Value
+        
         if isTrollActive then
-            CreateTrollEffect()
+            StopTrollEffect()
+            
+            local player = game.Players.LocalPlayer
+            local Camera = workspace.CurrentCamera
+            
+            -- สร้าง Part แสดงผลสำหรับรูปภาพ
+            trollPart = Instance.new("Part")
+            trollPart.Name = "LocalTrollImage"
+            trollPart.Size = Vector3.new(4, 6, 0.1)
+            trollPart.Transparency = 1
+            trollPart.CanCollide = false
+            trollPart.Anchored = true
+            trollPart.Parent = Camera -- ใส่ไว้ใน Camera เพื่อให้เห็นคนเดียว
+
+            -- ใส่ BillboardGui และ ImageLabel
+            local bbGui = Instance.new("BillboardGui")
+            bbGui.Size = UDim2.new(1, 0, 1, 0)
+            bbGui.AlwaysOnTop = true
+            bbGui.Adornee = trollPart
+            bbGui.Parent = trollPart
+
+            local imgLabel = Instance.new("ImageLabel")
+            imgLabel.Size = UDim2.fromScale(1, 1)
+            imgLabel.BackgroundTransparency = 1
+            imgLabel.Image = "rbxassetid://77095580457778"
+            imgLabel.ScaleType = Enum.ScaleType.Fit
+            imgLabel.Parent = bbGui
+
+            -- อัปเดตตำแหน่ง Part ให้ตามติด HumanoidRootPart ของเราตลอดเวลา
+            trollConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if not isTrollActive or not trollPart then return end
+                
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    local hrp = char.HumanoidRootPart
+                    -- ปรับตำแหน่งและทิศทางตามตัวละคร
+                    trollPart.CFrame = hrp.CFrame * CFrame.new(0, 0.2, 0)
+                end
+            end)
         else
-            RemoveTrollEffect()
+            StopTrollEffect()
         end
     end)
 end
