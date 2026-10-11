@@ -12,27 +12,10 @@ local WatermarkGui = nil
 local isTrollActive = false
 
 ---------------------------------------------------------
--- Intro Loading Screen (รูป Intro + โทนชมพูพาสเทล)
+-- Intro Loading Screen (แก้ไขวิธีเรียกรูปให้เสถียรขึ้น)
 ---------------------------------------------------------
-local INTRO_IMAGE = "rbxassetid://92577004509867"
 local INTRO_TITLE = "Ellysocute"
 local INTRO_TIME  = 4.5 
-
-local function ResolveIntroImage(src)
-    if src == "" then return nil end
-    if string.sub(src, 1, 13) == "rbxassetid://" or string.sub(src, 1, 11) == "rbxasset://" then
-        return src
-    end
-    if string.sub(src, 1, 4) == "http" and writefile and getcustomasset then
-        local ok, result = pcall(function()
-            local data = game:HttpGet(src)
-            writefile("KornluvEllyIntro.png", data)
-            return getcustomasset("KornluvEllyIntro.png")
-        end)
-        if ok then return result end
-    end
-    return nil
-end
 
 local function PlayIntro()
     local TweenService = game:GetService("TweenService")
@@ -50,52 +33,33 @@ local function PlayIntro()
 
     local group = Instance.new("CanvasGroup")
     group.Size = UDim2.fromScale(1, 1)
-    group.BackgroundColor3 = Color3.fromRGB(255, 245, 248)
+    group.BackgroundColor3 = Color3.fromRGB(255, 230, 240)
     group.BorderSizePixel = 0
     group.GroupTransparency = 1
     group.Active = true
     group.Parent = gui
 
-    -- โหลดและแสดงผลรูป Intro
-    local bg
-    local imageId = ResolveIntroImage(INTRO_IMAGE)
-    if imageId then
-        bg = Instance.new("ImageLabel")
-        bg.AnchorPoint = Vector2.new(0.5, 0.5)
-        bg.Position = UDim2.fromScale(0.5, 0.5)
-        bg.Size = UDim2.fromScale(1.1, 1.1)
-        bg.BackgroundTransparency = 1
-        bg.Image = imageId
-        bg.ScaleType = Enum.ScaleType.Crop
-        bg.ImageTransparency = 0.15
-        bg.Parent = group
-
-        TweenService:Create(bg, TweenInfo.new(7, Enum.EasingStyle.Linear), {
-            Size = UDim2.fromScale(1.3, 1.3),
-            Position = UDim2.fromScale(0.47, 0.48)
-        }):Play()
-        TweenService:Create(bg, TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-            ImageTransparency = 0.05
-        }):Play()
-    end
+    -- ใช้ ImageLabel พร้อมเช็ค Asset ID ตรงๆ เพื่อป้องกันภาพไม่ขึ้น
+    local bg = Instance.new("ImageLabel")
+    bg.AnchorPoint = Vector2.new(0.5, 0.5)
+    bg.Position = UDim2.fromScale(0.5, 0.5)
+    bg.Size = UDim2.fromScale(1.1, 1.1)
+    bg.BackgroundTransparency = 1
+    bg.Image = "rbxassetid://92577004509867"
+    bg.ScaleType = Enum.ScaleType.Crop
+    bg.ImageTransparency = 0.15
+    bg.Parent = group
 
     local shade = Instance.new("Frame")
     shade.Size = UDim2.fromScale(1, 1)
-    shade.BackgroundColor3 = Color3.fromRGB(255, 235, 242)
+    shade.BackgroundColor3 = Color3.fromRGB(255, 220, 235)
+    shade.BackgroundTransparency = 0.3
     shade.BorderSizePixel = 0
     shade.Parent = group
-    local shadeGrad = Instance.new("UIGradient")
-    shadeGrad.Rotation = 90
-    shadeGrad.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.85),
-        NumberSequenceKeypoint.new(0.6, 0.6),
-        NumberSequenceKeypoint.new(1, 0.3),
-    })
-    shadeGrad.Parent = shade
 
     local title = Instance.new("TextLabel")
     title.AnchorPoint = Vector2.new(0.5, 0.5)
-    title.Position = UDim2.fromScale(0.5, 0.5)
+    title.Position = UDim2.fromScale(0.5, 0.45)
     title.Size = UDim2.new(1, 0, 0, 60)
     title.BackgroundTransparency = 1
     title.Text = INTRO_TITLE
@@ -103,8 +67,8 @@ local function PlayIntro()
     title.TextSize = 46
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.TextTransparency = 1
-    title.TextStrokeColor3 = Color3.fromRGB(255, 170, 195)
-    title.TextStrokeTransparency = 1
+    title.TextStrokeColor3 = Color3.fromRGB(255, 140, 175)
+    title.TextStrokeTransparency = 0.3
     title.Parent = group
 
     local percent = Instance.new("TextLabel")
@@ -144,9 +108,7 @@ local function PlayIntro()
     task.wait(0.4)
 
     TweenService:Create(title, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        TextTransparency = 0,
-        TextStrokeTransparency = 0.3,
-        Position = UDim2.fromScale(0.5, 0.45)
+        TextTransparency = 0
     }):Play()
 
     local loadInfo = TweenInfo.new(INTRO_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
@@ -204,13 +166,13 @@ local function StartSakuraEffect(targetParent)
     sakuraContainer.ZIndex = 1
     sakuraContainer.Parent = targetParent
 
-    for i = 1, 25 do
+    for i = 1, 20 do
         task.spawn(function()
             local petal = Instance.new("Frame")
             local size = math.random(6, 12)
             petal.Size = UDim2.fromOffset(size, math.floor(size * 1.5))
             petal.BackgroundColor3 = Color3.fromRGB(255, 182, 193)
-            petal.BackgroundTransparency = 0.15 + math.random() * 0.2
+            petal.BackgroundTransparency = 0.2
             petal.BorderSizePixel = 0
             petal.Rotation = math.random(0, 360)
             petal.Parent = sakuraContainer
@@ -242,7 +204,7 @@ local function StartSakuraEffect(targetParent)
 end
 
 ---------------------------------------------------------
--- ใส่รูปภาพพื้นหลัง UI (Background Image) + ซากุระ
+-- ใส่รูปภาพพื้นหลัง UI แบบบังคับแสดงผล
 ---------------------------------------------------------
 task.spawn(function()
     local rootGui = Window.Root or (Window.UIElements and Window.UIElements.Main)
@@ -258,7 +220,6 @@ task.spawn(function()
     if rootGui then
         rootGui.BackgroundColor3 = Color3.fromRGB(255, 242, 246)
 
-        -- สร้าง ImageLabel สำหรับรูป Background ของ UI
         local uiBg = Instance.new("ImageLabel")
         uiBg.Name = "WindowCustomBackground"
         uiBg.Size = UDim2.fromScale(1, 1)
@@ -266,19 +227,10 @@ task.spawn(function()
         uiBg.BackgroundTransparency = 1
         uiBg.Image = "rbxassetid://79436187892950"
         uiBg.ScaleType = Enum.ScaleType.Crop
-        uiBg.ImageTransparency = 0.05
+        uiBg.ImageTransparency = 0.1
         uiBg.ZIndex = -10
         uiBg.Parent = rootGui
         
-        local overlay = Instance.new("Frame")
-        overlay.Name = "PastelOverlay"
-        overlay.Size = UDim2.fromScale(1, 1)
-        overlay.BackgroundColor3 = Color3.fromRGB(255, 245, 248)
-        overlay.BackgroundTransparency = 0.85
-        overlay.BorderSizePixel = 0
-        overlay.ZIndex = -9
-        overlay.Parent = rootGui
-
         StartSakuraEffect(rootGui)
     end
 end)
@@ -306,7 +258,6 @@ do
         if isTrollActive then
             task.spawn(function()
                 while isTrollActive and isScriptRunning do
-                    -- ใส่โค้ดคำสั่ง Troll ที่ต้องการทำงานขณะเปิดตรงนี้
                     task.wait(1)
                 end
             end)
